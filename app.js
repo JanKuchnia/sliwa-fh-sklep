@@ -2,14 +2,14 @@
 'use strict';
 
 const CATEGORIES = [
-  {key:'ogrodnicze', label:'Narzędzia ogrodnicze', accent:'#4c7a3f', initial:'N'},
-  {key:'budowlane', label:'Narzędzia budowlane', accent:'#1c3a5c', initial:'B'},
-  {key:'kolana', label:'Kolana i złączki', accent:'#b8801f', initial:'K'},
-  {key:'lancuchy', label:'Łańcuchy', accent:'#5b6270', initial:'Ł'},
-  {key:'malarskie', label:'Pędzle i akcesoria malarskie', accent:'#c0392b', initial:'P'},
-  {key:'drabiny', label:'Drabiny', accent:'#2f5580', initial:'D'},
-  {key:'metalowe', label:'Artykuły metalowe', accent:'#21242b', initial:'M'},
-  {key:'chemia', label:'Chemia budowlana', accent:'#d69a3d', initial:'C'},
+  {key:'ogrodnicze', label:'Narzędzia ogrodnicze', accent:'#4c7a3f', icon:'tree-pine'},
+  {key:'budowlane', label:'Narzędzia budowlane', accent:'#1c3a5c', icon:'hammer'},
+  {key:'kolana', label:'Kolana i złączki', accent:'#b8801f', icon:'wrench'},
+  {key:'lancuchy', label:'Łańcuchy', accent:'#5b6270', icon:'link'},
+  {key:'malarskie', label:'Pędzle i akcesoria malarskie', accent:'#c0392b', icon:'paint-roller'},
+  {key:'drabiny', label:'Drabiny', accent:'#2f5580', icon:'ladder'},
+  {key:'metalowe', label:'Artykuły metalowe', accent:'#21242b', icon:'package'},
+  {key:'chemia', label:'Chemia budowlana', accent:'#d69a3d', icon:'flask-conical'},
 ];
 
 const PRODUCTS = [
@@ -56,7 +56,7 @@ const DELIVERY_OPTS = [
 const PAYMENT_OPTS = [
   {key:'transfer', label:'Przelew tradycyjny', sub:'Dane do przelewu w mailu potwierdzającym'},
   {key:'cod', label:'Płatność przy odbiorze / za pobraniem', sub:'Gotówka lub karta'},
-  {key:'online', label:'Płatność online', sub:'Szybkie płatności — wkrótce dostępne'},
+  {key:'online', label:'Płatność online', sub:'Szybkie płatności, wkrótce dostępne'},
 ];
 
 const catByKey = {}; CATEGORIES.forEach(c=>catByKey[c.key]=c);
@@ -123,10 +123,16 @@ function submitSearch(){ if(state.searchQuery.trim()){ setState({view:'search'})
 
 function cartCount(){ return Object.values(state.cart).reduce((a,b)=>a+b,0); }
 
+function imgPlaceholder(p, extraClass, height){
+  const cat = catByKey[p.category];
+  const style = `--accent:${cat?cat.accent:'#1c3a5c'};${height?`height:${height}px`:''}`;
+  return `<div class="img-placeholder${extraClass?' '+extraClass:''}" style="${style}"><i data-lucide="${cat?cat.icon:'box'}"></i></div>`;
+}
+
 function productCard(p, imgHeight){
   return `
   <div class="p-card" data-open-product="${p.id}">
-    <div class="p-img" style="${imgHeight?`height:${imgHeight}px`:''}"><span>zdjęcie: ${esc(p.name)}</span></div>
+    ${imgPlaceholder(p, '', imgHeight)}
     <div class="p-body">
       <div class="p-name">${esc(p.name)}</div>
       <div class="p-price">${fmt(p.price)} / ${esc(p.unit)}</div>
@@ -140,11 +146,11 @@ function headerHtml(){
   return `
   <div class="topbar"><div class="wrap">
     <div class="topbar-left">
-      <span>📍 Rzeszotary 451, 32-040 Świątniki Górne</span>
-      <span>☎ 12 270 43 53</span>
+      <span><i data-lucide="map-pin"></i> Rzeszotary 451, 32-040 Świątniki Górne</span>
+      <span><i data-lucide="phone"></i> 12 270 43 53</span>
       <span>Pon–pt 07:00–17:00, weekend nieczynne</span>
     </div>
-    <div class="topbar-rating"><span>★★★★★</span><span class="count">4,8 (12 opinii Google)</span></div>
+    <div class="topbar-rating"><span class="stars">${'<i data-lucide="star" class="ico-fill"></i>'.repeat(5)}</span><span class="count">4,8 (12 opinii Google)</span></div>
   </div></div>
   <header><div class="wrap">
     <div class="logo" data-nav="home">
@@ -153,13 +159,13 @@ function headerHtml(){
     </div>
     <div class="search">
       <input data-role="search-input" value="${esc(state.searchQuery)}" placeholder="Szukaj produktu, np. drabina, pędzel...">
-      <button data-role="search-submit">🔍</button>
+      <button data-role="search-submit"><i data-lucide="search"></i></button>
     </div>
     <nav class="main-nav">
       <a data-nav="home">Strona główna</a>
       <a data-role="open-wholesale">Hurt</a>
       <div class="cart-btn" data-nav="cart">
-        <span class="icon">🛒</span>
+        <i data-lucide="shopping-cart" class="icon"></i>
         <span>Koszyk</span>
         ${count ? `<span class="cart-badge">${count}</span>` : ''}
       </div>
@@ -169,20 +175,20 @@ function headerHtml(){
 
 function homeHtml(){
   const cats = CATEGORIES.map(c=>`
-    <div class="cat-card" data-open-category="${c.key}">
-      <div class="cat-icon" style="background:${c.accent}">${c.initial}</div>
+    <div class="cat-card reveal" data-open-category="${c.key}">
+      <div class="cat-icon" style="background:${c.accent}"><i data-lucide="${c.icon}"></i></div>
       <div class="cat-label">${esc(c.label)}</div>
       <div class="cat-count">${PRODUCTS.filter(p=>p.category===c.key).length} produktów</div>
     </div>`).join('');
 
-  const featured = FEATURED_IDS.map(id=>productById[id]).filter(Boolean).map(p=>productCard(p)).join('');
+  const featured = FEATURED_IDS.map(id=>productById[id]).filter(Boolean).map(p=>`<div class="reveal">${productCard(p)}</div>`).join('');
 
   return `
   <section class="hero">
     <img src="./assets/sliwa-facade.png" alt="Siedziba FH Śliwa w Rzeszotarach">
     <div class="hero-overlay"></div>
-    <div class="hero-content"><div class="hero-inner">
-      <div class="hero-badge">★ 4,8 · 12 opinii Google</div>
+    <div class="hero-content"><div class="hero-inner hero-enter">
+      <div class="hero-badge"><i data-lucide="star" class="ico-fill"></i> 4,8 · 12 opinii Google</div>
       <h1>Narzędzia ogrodniczo-budowlane w Rzeszotarach</h1>
       <p>Od lat zaopatrujemy okolicznych majsterkowiczów, ekipy budowlane i firmy w narzędzia, okucia, chemię i akcesoria malarskie. Odbiór na miejscu w Rzeszotarach.</p>
       <div class="hero-actions">
@@ -193,17 +199,17 @@ function homeHtml(){
   </section>
 
   <section id="katalog" class="section">
-    <h2>Kategorie</h2>
+    <h2 class="reveal">Kategorie</h2>
     <p class="lead">Wybierz kategorię, aby zobaczyć pełny asortyment</p>
     <div class="grid-4">${cats}</div>
   </section>
 
   <section class="featured-section">
-    <h2>Polecane produkty</h2>
+    <h2 class="reveal">Polecane produkty</h2>
     <div class="grid-4 products">${featured}</div>
   </section>
 
-  <section class="wholesale-banner"><div class="wrap">
+  <section class="wholesale-banner"><div class="wrap reveal">
     <div>
       <div class="title">Zamówienia hurtowe dla firm i ekip budowlanych</div>
       <div class="desc">Stałe rabaty ilościowe, faktura VAT, indywidualna wycena zamówienia.</div>
@@ -222,8 +228,8 @@ function homeHtml(){
       <div class="hours-row"><span>Poniedziałek – piątek</span><span style="font-weight:600">07:00–17:00</span></div>
       <div class="hours-row soft"><span>Sobota – niedziela</span><span>Nieczynne</span></div>
       <div class="addr">
-        <div>📍 Rzeszotary 451, 32-040 Świątniki Górne</div>
-        <div>☎ 12 270 43 53</div>
+        <div><i data-lucide="map-pin"></i> Rzeszotary 451, 32-040 Świątniki Górne</div>
+        <div><i data-lucide="phone"></i> 12 270 43 53</div>
       </div>
     </div>
   </section>`;
@@ -268,7 +274,7 @@ function productHtml(){
   <section class="product-section">
     <div class="breadcrumb"><a data-nav="home">Strona główna</a> / ${esc(cat?cat.label:'')} / ${esc(p.name)}</div>
     <div class="product-grid">
-      <div class="product-img"><span>zdjęcie: ${esc(p.name)}</span></div>
+      ${imgPlaceholder(p, 'product-img-lg')}
       <div class="product-info">
         <h1>${esc(p.name)}</h1>
         <div class="product-sku">SKU: ${esc(p.sku)}</div>
@@ -280,15 +286,15 @@ function productHtml(){
             <div class="val">${qty}</div>
             <button data-qty="inc">+</button>
           </div>
-          <button class="add-line" data-role="add-active">Dodaj do koszyka — ${fmt(p.price*qty)}</button>
+          <button class="add-line" data-role="add-active">Dodaj do koszyka: ${fmt(p.price*qty)}</button>
         </div>
         <div class="desc-block">
           <div class="title">Opis produktu</div>
           <ul>${p.desc.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>
         </div>
         <div class="product-meta">
-          <span>📍 Odbiór osobisty w Rzeszotarach</span>
-          <span>🚚 Dostawa kurierem</span>
+          <span><i data-lucide="map-pin"></i> Odbiór osobisty w Rzeszotarach</span>
+          <span><i data-lucide="truck"></i> Dostawa kurierem</span>
         </div>
       </div>
     </div>
@@ -296,7 +302,7 @@ function productHtml(){
       <h2>Powiązane produkty</h2>
       <div class="grid-3">${related.map(r=>`
         <div class="p-card" data-open-product="${r.id}">
-          <div class="p-img related-img"><span>zdjęcie: ${esc(r.name)}</span></div>
+          ${imgPlaceholder(r, 'related-img')}
           <div class="related-body">
             <div class="related-name">${esc(r.name)}</div>
             <div class="related-price">${fmt(r.price)} / ${esc(r.unit)}</div>
@@ -313,7 +319,7 @@ function cartHtml(){
     <section class="cart-section">
       <h1>Koszyk</h1>
       <div class="cart-empty">
-        <div class="icon">🛒</div>
+        <i data-lucide="shopping-cart" class="icon"></i>
         <div class="msg">Twój koszyk jest pusty</div>
         <a data-nav="home">Przeglądaj katalog</a>
       </div>
@@ -329,7 +335,7 @@ function cartHtml(){
 
   const items = entries.map(e=>`
     <div class="cart-item">
-      <div class="cart-item-img"></div>
+      ${imgPlaceholder(e.p, 'cart-item-img')}
       <div class="cart-item-info">
         <div class="cart-item-name">${esc(e.p.name)}</div>
         <div class="cart-item-price">${fmt(e.p.price)} / ${esc(e.p.unit)}</div>
@@ -340,7 +346,7 @@ function cartHtml(){
         <button data-cart-inc="${e.id}">+</button>
       </div>
       <div class="cart-item-total">${fmt(e.p.price*e.qty)}</div>
-      <button class="cart-item-remove" data-cart-remove="${e.id}">✕</button>
+      <button class="cart-item-remove" data-cart-remove="${e.id}"><i data-lucide="x"></i></button>
     </div>`).join('');
 
   return `
@@ -365,7 +371,7 @@ function stepsHtml(){
   return `<div class="steps">${STEP_LABELS.map((label,i)=>{
     const num = i+1;
     const cls = num===n ? 'active' : num<n ? 'done' : 'pending';
-    const inner = num<n ? '✓' : num;
+    const inner = num<n ? '<i data-lucide="check"></i>' : num;
     return `
     <div class="step">
       <div class="step-inner">
@@ -479,7 +485,7 @@ function checkoutHtml(){
 function confirmationHtml(){
   return `
   <section class="confirmation-section">
-    <div class="confirm-check">✓</div>
+    <div class="confirm-check"><i data-lucide="check" class="ico-fill"></i></div>
     <h1>Dziękujemy za zamówienie!</h1>
     <p>Numer zamówienia: <strong style="color:var(--ink)">${esc(state.orderNumber)}</strong></p>
     <p class="note">Skontaktujemy się telefonicznie w celu potwierdzenia szczegółów odbioru lub dostawy.</p>
@@ -514,11 +520,11 @@ function wholesaleModalHtml(){
   <div class="modal-overlay" data-role="close-wholesale">
     <div class="modal-box" data-role="stop-click">
       <div class="title">Zamówienia hurtowe</div>
-      <p>Obsługujemy sklepy, ekipy budowlane i firmy — stałe rabaty ilościowe i indywidualna wycena. Zadzwoń lub odwiedź nas osobiście.</p>
+      <p>Obsługujemy sklepy, ekipy budowlane i firmy. Stałe rabaty ilościowe i indywidualna wycena. Zadzwoń lub odwiedź nas osobiście.</p>
       <div class="modal-contact">
-        <div>☎ 12 270 43 53</div>
-        <div>📍 Rzeszotary 451, 32-040 Świątniki Górne</div>
-        <div>🕐 Pon–pt 07:00–17:00</div>
+        <div><i data-lucide="phone"></i> 12 270 43 53</div>
+        <div><i data-lucide="map-pin"></i> Rzeszotary 451, 32-040 Świątniki Górne</div>
+        <div><i data-lucide="clock"></i> Pon–pt 07:00–17:00</div>
       </div>
       <button class="modal-close" data-role="close-wholesale">Zamknij</button>
     </div>
@@ -527,7 +533,7 @@ function wholesaleModalHtml(){
 
 function toastHtml(){
   if(!state.toast) return '';
-  return `<div class="toast">✓ ${esc(state.toast)}</div>`;
+  return `<div class="toast"><i data-lucide="check" class="ico-fill"></i> ${esc(state.toast)}</div>`;
 }
 
 const VIEW_RENDERERS = {
@@ -557,6 +563,20 @@ function render(){
     const el = focusKey==='search' ? app.querySelector('[data-role="search-input"]') : app.querySelector(`[data-field="${focusKey}"]`);
     if(el){ el.focus(); if(selStart!=null) el.setSelectionRange(selStart, selEnd); }
   }
+  initReveal(app);
+  lucide.createIcons();
+}
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function initReveal(app){
+  const els = app.querySelectorAll('.reveal');
+  if(prefersReducedMotion){ els.forEach(el=>el.classList.add('revealed')); return; }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){ entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, {threshold:0.15, rootMargin:'0px 0px -40px 0px'});
+  els.forEach((el,i)=>{ el.style.transitionDelay = Math.min(i%8,6)*45+'ms'; io.observe(el); });
 }
 
 document.addEventListener('DOMContentLoaded', function(){
